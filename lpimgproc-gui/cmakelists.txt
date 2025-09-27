@@ -1,0 +1,13 @@
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+add_executable(lpimgproc-gui "src/main.cpp")
+
+target_link_libraries(lpimgproc-gui
+    PRIVATE
+        Qt6::Widgets
+        lpimgproc-core 
+)
