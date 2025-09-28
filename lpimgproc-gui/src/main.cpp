@@ -1,99 +1,205 @@
 ﻿#include <QImage>
+#include <QApplication>
+#include <QPushButton>
+#include <QLabel>
+#include <QVBoxLayout>
+
+#include <QHBoxLayout>
+#include <QFileDialog>
+#include <QWidget>
+
+#include "NodeEditorWidget.h"
+
+#include <QTimer>
+#include <QMenu>
 #include <QString>
 #include <memory>
 #include <iostream>
 #include <algorithm>
-#include "Node.h"     
+#include "nodes/Node.h"     
 #include "lpimgproc/Image.h"
 #include <QDebug>
+#include "NodeFactory.h"
+#include "nodes/ImageNodes.h"
 
 using namespace lpimgproc;
 
 ImagePtr QImageToLpImage(const QImage& qimg_in) {
-    QImage qimg = qimg_in.convertToFormat(QImage::Format_RGBA8888);
-    auto lpimg = std::make_shared<Image>(
-        static_cast<uint32_t>(qimg.width()),
-        static_cast<uint32_t>(qimg.height()),
-        Image::RGBA);
-
-    for (int y = 0; y < qimg.height(); ++y) {
-        for (int x = 0; x < qimg.width(); ++x) {
-            QRgb px = qimg.pixel(x, y);
-            lpimg->at(x, y, 0) = qRed(px) / 255.0f;
-            lpimg->at(x, y, 1) = qGreen(px) / 255.0f;
-            lpimg->at(x, y, 2) = qBlue(px) / 255.0f;
-            lpimg->at(x, y, 3) = qAlpha(px) / 255.0f;
+    if (qimg_in.hasAlphaChannel()) {
+        QImage qimg = qimg_in.convertToFormat(QImage::Format_RGBA8888);
+        auto lpimg = std::make_shared<Image>(qimg.width(), qimg.height(), Image::RGBA);
+        for (int y = 0; y < qimg.height(); ++y) {
+            for (int x = 0; x < qimg.width(); ++x) {
+                QRgb px = qimg.pixel(x, y);
+                lpimg->at(x, y, 0) = qRed(px) / 255.0f;
+                lpimg->at(x, y, 1) = qGreen(px) / 255.0f;
+                lpimg->at(x, y, 2) = qBlue(px) / 255.0f;
+                lpimg->at(x, y, 3) = qAlpha(px) / 255.0f;
+            }
         }
+        return lpimg;
     }
-    return lpimg;
+    else if (qimg_in.isGrayscale()) {
+        QImage qimg = qimg_in.convertToFormat(QImage::Format_Grayscale8);
+        auto lpimg = std::make_shared<Image>(qimg.width(), qimg.height(), Image::G);
+        for (int y = 0; y < qimg.height(); ++y) {
+            for (int x = 0; x < qimg.width(); ++x) {
+                lpimg->at(x, y, 0) = qGray(qimg.pixel(x, y)) / 255.0f;
+            }
+        }
+        return lpimg;
+    }
+    else {
+        QImage qimg = qimg_in.convertToFormat(QImage::Format_RGB888);
+        auto lpimg = std::make_shared<Image>(qimg.width(), qimg.height(), Image::RGB);
+        for (int y = 0; y < qimg.height(); ++y) {
+            for (int x = 0; x < qimg.width(); ++x) {
+                QRgb px = qimg.pixel(x, y);
+                lpimg->at(x, y, 0) = qRed(px) / 255.0f;
+                lpimg->at(x, y, 1) = qGreen(px) / 255.0f;
+                lpimg->at(x, y, 2) = qBlue(px) / 255.0f;
+            }
+        }
+        return lpimg;
+    }
 }
-
 QImage LpImageToQImage(const Image& img) {
     const int w = static_cast<int>(img.width());
     const int h = static_cast<int>(img.height());
-    const uint64_t total = img.data().size();
-    const int chans = (w > 0 && h > 0) ? static_cast<int>(total / (w * h)) : 4;
 
-    QImage qimg(w, h, QImage::Format_ARGB32);
-
-    for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
-            int r = 0, g = 0, b = 0, a = 255;
-            if (chans >= 1) r = static_cast<int>(std::clamp(img.at(x, y, 0) * 255.0f, 0.0f, 255.0f));
-            if (chans >= 2) g = static_cast<int>(std::clamp(img.at(x, y, 1) * 255.0f, 0.0f, 255.0f));
-            if (chans >= 3) b = static_cast<int>(std::clamp(img.at(x, y, 2) * 255.0f, 0.0f, 255.0f));
-            if (chans >= 4) a = static_cast<int>(std::clamp(img.at(x, y, 3) * 255.0f, 0.0f, 255.0f));
-            if (chans == 1) g = b = r;
-            qimg.setPixel(x, y, qRgba(r, g, b, a));
+    switch (img.colourSpace()) {
+    case Image::G: {
+        QImage qimg(w, h, QImage::Format_Grayscale8);
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                int gray = static_cast<int>(std::clamp(img.at(x, y, 0) * 255.0f, 0.0f, 255.0f));
+                qimg.setPixel(x, y, qRgb(gray, gray, gray));
+            }
         }
+        return qimg;
     }
-    return qimg;
+
+    case Image::GA: {
+        QImage qimg(w, h, QImage::Format_ARGB32);
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                int gray = static_cast<int>(std::clamp(img.at(x, y, 0) * 255.0f, 0.0f, 255.0f));
+                int alpha = static_cast<int>(std::clamp(img.at(x, y, 1) * 255.0f, 0.0f, 255.0f));
+                qimg.setPixel(x, y, qRgba(gray, gray, gray, alpha));
+            }
+        }
+        return qimg;
+    }
+
+    case Image::RGB: {
+        QImage qimg(w, h, QImage::Format_ARGB32);
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                int r = static_cast<int>(std::clamp(img.at(x, y, 0) * 255.0f, 0.0f, 255.0f));
+                int g = static_cast<int>(std::clamp(img.at(x, y, 1) * 255.0f, 0.0f, 255.0f));
+                int b = static_cast<int>(std::clamp(img.at(x, y, 2) * 255.0f, 0.0f, 255.0f));
+                qimg.setPixel(x, y, qRgba(r, g, b, 255));
+            }
+        }
+        return qimg;
+    }
+
+    case Image::RGBA:
+    default: {
+        QImage qimg(w, h, QImage::Format_ARGB32);
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                int r = static_cast<int>(std::clamp(img.at(x, y, 0) * 255.0f, 0.0f, 255.0f));
+                int g = static_cast<int>(std::clamp(img.at(x, y, 1) * 255.0f, 0.0f, 255.0f));
+                int b = static_cast<int>(std::clamp(img.at(x, y, 2) * 255.0f, 0.0f, 255.0f));
+                int a = static_cast<int>(std::clamp(img.at(x, y, 3) * 255.0f, 0.0f, 255.0f));
+                qimg.setPixel(x, y, qRgba(r, g, b, a));
+            }
+        }
+        return qimg;
+    }
+    }
 }
 
 auto connectPins = [](OutputPin& out, InputPin& in, size_t idx = 0) {
     in.connection = &out;
     in.outputIndex = idx;
     out.connections.push_back(&in);
-    };
+};
+            
 
 int main(int argc, char** argv) {
+    QApplication app(argc, argv);
 
-    if (argc < 3) {
-        std::cerr << "Usage: ./test_node_graph input.png output.png\n";
-        return 1;
+    QWidget window;
+    auto main_layout = new QHBoxLayout(&window);
+
+    auto left_panel = new QWidget();
+    auto left_layout = new QVBoxLayout(left_panel);
+    QPushButton loadButton("Load Image");
+    QPushButton processButton("Process");
+    QPushButton addNodeButton("Add Node");
+    QMenu addNodeMenu(&window);
+    addNodeButton.setMenu(&addNodeMenu);
+    QLabel imageLabel;
+    imageLabel.setFixedSize(400, 400);
+
+    left_layout->addWidget(&loadButton);
+    left_layout->addWidget(&processButton);
+    left_layout->addWidget(&addNodeButton);
+    left_layout->addWidget(&imageLabel);
+    left_layout->addStretch();
+
+
+    auto node_editor = new NodeEditorWidget();
+
+    main_layout->addWidget(left_panel);
+    main_layout->addWidget(node_editor, 1); 
+
+    NodeFactory factory;
+    for (const auto& name : factory.getCreatableNodeNames()) {
+        addNodeMenu.addAction(name);
     }
 
-    QString inputPath = argv[1];
-    QString outputPath = argv[2];
+    auto inputNode = std::make_shared<ImageInputNode>();
+    auto displayNode = std::make_shared<ImageDisplayNode>();
 
-    QImage inputQ(inputPath);
-    if (inputQ.isNull()) {
-        std::cerr << "Failed to load image: " << inputPath.toStdString() << "\n";
-        return 1;
-    }
+    node_editor->addNode(inputNode, QPointF(50, 100));
+    node_editor->addNode(displayNode, QPointF(550, 100));
 
-    auto inputNode = std::make_unique<ImageInputNode>(QImageToLpImage(inputQ));
-    auto invertNode = std::make_unique<InvertNode>();
-    auto displayNode = std::make_unique<ImageDisplayNode>();
 
-    connectPins(inputNode->outputs()[0], invertNode->inputs()[0]);
-    connectPins(invertNode->outputs()[0], displayNode->inputs()[0]);
+    QObject::connect(&loadButton, &QPushButton::clicked, [&]() {
+        QString path = QFileDialog::getOpenFileName(&window, "Select image");
+        if (path.isEmpty()) return;
 
-    ImagePtr result = displayNode->getImage();
-    if (!result) {
-        std::cerr << "Graph produced no output\n";
-        return 1;
-    }
+        QImage qimg(path);
+        if (qimg.isNull()) return;
 
-    const auto& d = result->data();
+        ImagePtr lpimg = QImageToLpImage(qimg);
+        inputNode->setImage(lpimg);
 
-    QImage outQ = LpImageToQImage(*result);
-    if (!outQ.save(outputPath)) {
-        std::cerr << "Failed to save output image: " << outputPath.toStdString() << "\n";
-        return 1;
-    }
+        imageLabel.setPixmap(QPixmap::fromImage(qimg).scaled(400, 400, Qt::KeepAspectRatio));
+        });
 
-    std::cout << "Saved inverted image to " << outputPath.toStdString() << "\n";
+    QObject::connect(&processButton, &QPushButton::clicked, [&]() {
+        ImagePtr outImg = displayNode->getImage();
+        if (!outImg) return;
 
-    return 0;
+        QImage outQ = LpImageToQImage(*outImg);
+        imageLabel.setPixmap(QPixmap::fromImage(outQ).scaled(400, 400, Qt::KeepAspectRatio));
+        });
+
+    QObject::connect(&addNodeMenu, &QMenu::triggered, [&](QAction* action) {
+        std::shared_ptr<Node> new_node = factory.createNode(action->text());
+        if (new_node) {
+            QPoint view_center = node_editor->view()->viewport()->rect().center();
+            QPointF scene_center = node_editor->view()->mapToScene(view_center);
+            node_editor->addNode(new_node, scene_center);
+        }
+        });
+
+    window.setWindowTitle("Node Graph Image Processor");
+    window.resize(1200, 800);
+    window.show();
+    return app.exec();
 }

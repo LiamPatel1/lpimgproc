@@ -4,7 +4,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-add_executable(lpimgproc-gui "src/main.cpp")
+add_executable(lpimgproc-gui "src/main.cpp" "src/views/NodeItem.h" "src/views/NodeItem.cpp" "src/NodeEditorWidget.h" "src/NodeEditorWidget.cpp" "src/nodes/InvertNode.h" "src/nodes/ValueNode.h" "src/nodes/ImageNodes.h" "src/views/PinItem.h" "src/views/ConnectionItem.h" "src/NodeFactory.h" "src/NodeFactory.cpp" "src/views/PinItem.cpp" "src/views/ConnectionItem.cpp")
+
+target_include_directories(lpimgproc-gui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(lpimgproc-gui
     PRIVATE

@@ -5,7 +5,6 @@
 #include <string>
 #include <optional>
 
-#include <cstdint>
 #include <lpimgproc/Operators.h>
 
 struct OutputPin;
@@ -34,6 +33,8 @@ struct OutputPin {
 class Node {
 public:
     virtual ~Node() = default;
+
+    virtual std::string name() const = 0;
 
     Value evaluateOutput(size_t output_index) {
         if (dirty_) {
@@ -89,50 +90,4 @@ protected:
     bool dirty_ = true;
 };
 
-class InvertNode : public Node {
-public:
-    InvertNode() {
-        initInputs(1);
-        initOutputs(1);
-    }
 
-protected:
-    void compute() override {
-        Value inVal = getInputValue(0);
-        if (auto pimg = std::get_if<ImagePtr>(&inVal)) {
-            if (*pimg) {
-                lpimgproc::Image out = lpimgproc::operators::invert(**pimg);
-                outputs_[0].value = std::make_shared<lpimgproc::Image>(std::move(out));
-                return;
-            }
-        }
-        outputs_[0].value = std::monostate{};
-    }
-};
-
-class ImageInputNode : public Node {
-public:
-    explicit ImageInputNode(ImagePtr img = nullptr) {
-        initOutputs(1);
-        image_ = std::move(img);
-    }
-    void setImage(ImagePtr img) { image_ = std::move(img); makeDirty(); }
-protected:
-    void compute() override {
-        outputs_[0].value = image_ ? Value(image_) : Value(std::monostate{});
-    }
-private:
-    ImagePtr image_;
-};
-
-class ImageDisplayNode : public Node {
-public:
-    ImageDisplayNode() { initInputs(1); }
-    ImagePtr getImage() {
-        Value v = getInputValue(0);
-        if (auto pimg = std::get_if<ImagePtr>(&v)) return *pimg;
-        return nullptr;
-    }
-protected:
-    void compute() override {}
-};
