@@ -5,18 +5,21 @@
 #include <string>
 #include <optional>
 
-#include <lpimgproc/Operators.h>
+#include <lpimgproc/operators.h>
 
 struct OutputPin;
 class Node;
 
 namespace lpimgproc {
     class Image;
+    class Kernel;
 }
 
 using ImagePtr = std::shared_ptr<lpimgproc::Image>;
+using KernelPtr = std::shared_ptr<lpimgproc::Kernel>;
 
-using Value = std::variant<std::monostate, ImagePtr, uint32_t, float, std::string>;
+
+using Value = std::variant<std::monostate, ImagePtr, KernelPtr, uint32_t, float, std::string>;
 
 struct InputPin {
     OutputPin* connection = nullptr;  

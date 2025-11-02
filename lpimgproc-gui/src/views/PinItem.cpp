@@ -10,7 +10,7 @@
 #include "PinItem.h"
 #include "ConnectionItem.h"
 
-#include "Nodes/ValueNode.h"
+#include "Nodes/FloatNode.h"
 #include "Nodes/ImageNodes.h"
 #include "Nodes/InvertNode.h"
 

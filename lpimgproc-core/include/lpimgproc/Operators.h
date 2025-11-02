@@ -1,4 +1,5 @@
 #include "lpimgproc/Image.h"
+#include "lpimgproc/Kernel.h"
 
 namespace lpimgproc::operators {
 
@@ -10,10 +11,6 @@ namespace lpimgproc::operators {
 
     Image invert(const Image& img, uint32_t flags = InvertFlags::None);
 
-
-
-
-
-
+    Image convolve(const Image& img, const Kernel& kernel);
 
 }

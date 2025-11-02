@@ -1,12 +1,12 @@
 #include "nodes/Node.h"
 
-class ValueNode : public Node {
+class FloatNode : public Node {
 public:
-    ValueNode() {
+    FloatNode() {
         initOutputs(1);
     }
 
-    std::string name() const override { return "Value"; }
+    std::string name() const override { return "Float"; }
 
     void setValue(float val) {
         if (value_ != val) {

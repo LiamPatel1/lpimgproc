@@ -1,10 +1,15 @@
 #include "NodeFactory.h"
 #include "nodes/InvertNode.h"
-#include "nodes/ValueNode.h"
+#include "nodes/FloatNode.h"
+#include "nodes/KernelNode.h"
+#include "nodes/ConvolveNode.h"
 
 NodeFactory::NodeFactory() {
     registry_["Invert"] = []() { return std::make_shared<InvertNode>(); };
-    registry_["Value"] = []() { return std::make_shared<ValueNode>(); };
+    registry_["Float"] = []() { return std::make_shared<FloatNode>(); };
+    registry_["Kernel"] = []() { return std::make_shared<KernelNode>(); };
+    registry_["Convolve"] = []() { return std::make_shared<ConvolveNode>(); };
+
 }
 
 std::shared_ptr<Node> NodeFactory::createNode(const QString& name) {

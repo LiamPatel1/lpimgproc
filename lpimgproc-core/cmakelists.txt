@@ -1,4 +1,4 @@
-add_library(lpimgproc-core STATIC "src/Image.cpp" "include/lpimgproc/Operators.h" "src/Operators.cpp")
+add_library(lpimgproc-core STATIC "src/Image.cpp" "include/lpimgproc/Operators.h" "src/operators.cpp" "include/lpimgproc/Kernel.h")
 
 target_include_directories(lpimgproc-core PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

@@ -10,10 +10,14 @@
 #include "PinItem.h"
 #include "ConnectionItem.h"
 
-#include "Nodes/ValueNode.h"
+#include "Nodes/FloatNode.h"
 #include "Nodes/ImageNodes.h"
+#include "lpimgproc/Kernel.h"
 #include "Nodes/InvertNode.h"
-
+#include "nodes/KernelNode.h"
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLabel>
 
 NodeItem::NodeItem(std::shared_ptr<Node> node_logic)
     : QGraphicsRectItem(0, 0, 150, 100), node_logic_(std::move(node_logic)) {
@@ -39,7 +43,7 @@ NodeItem::NodeItem(std::shared_ptr<Node> node_logic)
         output_pins_.push_back(pin);
     }
 
-    if (auto value_node = std::dynamic_pointer_cast<ValueNode>(node_logic_)) {
+    if (auto float_node = std::dynamic_pointer_cast<FloatNode>(node_logic_)) {
         auto* spin_box = new QDoubleSpinBox();
         spin_box->setRange(-1000, 1000);
         spin_box->setSingleStep(0.1);
@@ -51,13 +55,13 @@ NodeItem::NodeItem(std::shared_ptr<Node> node_logic)
         proxy->setPos(15, 50); 
 
         QObject::connect(spin_box, qOverload<double>(&QDoubleSpinBox::valueChanged),
-            [value_node](double val) {
-                value_node->setValue(static_cast<float>(val));
+            [float_node](double val) {
+                float_node->setValue(static_cast<float>(val));
             }
         );
     }
     else if (auto invert_node = std::dynamic_pointer_cast<InvertNode>(node_logic_)) {
-        auto* checkbox = new QCheckBox("Invert Alpha");
+        QCheckBox* checkbox = new QCheckBox("Invert Alpha");
         checkbox->setStyleSheet("color: white;"); 
         checkbox->setChecked(invert_node->invertsAlpha()); 
 
@@ -70,6 +74,97 @@ NodeItem::NodeItem(std::shared_ptr<Node> node_logic)
                 invert_node->setInvertAlpha(state == Qt::Checked);
             }
         );
+    }
+
+    else if (auto kernel_node = std::dynamic_pointer_cast<KernelNode>(node_logic_)) {
+        auto* interfaceBox = new QWidget();
+        auto* interfaceLayout = new QVBoxLayout(interfaceBox);
+
+        auto* dimensionsLayout = new QHBoxLayout();
+        auto* widthbox = new QSpinBox();
+        widthbox->setRange(1, 15);
+        widthbox->setValue(3);
+        auto* heightbox = new QSpinBox();
+        heightbox->setRange(1, 15);
+        heightbox->setValue(3);
+
+        dimensionsLayout->addWidget(new QLabel("W:"));
+        dimensionsLayout->addWidget(widthbox);
+        dimensionsLayout->addWidget(new QLabel("H:"));
+        dimensionsLayout->addWidget(heightbox);
+        interfaceLayout->addLayout(dimensionsLayout);
+
+        auto* inputGridBox = new QGroupBox("Values");
+        inputGridBox->setStyleSheet("color: white;");
+        auto* inputGridLayout = new QGridLayout(inputGridBox);
+        interfaceLayout->addWidget(inputGridBox);
+
+        QVector<QDoubleSpinBox*> inputs;
+
+        auto updateKernel = [=]() {
+            std::vector<float> data;
+            int width = widthbox->value();
+            int height = heightbox->value();
+            data.reserve(width * height);
+
+            for (int y = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
+                    if (QLayoutItem* item = inputGridLayout->itemAtPosition(y, x)) {
+                        if (auto* spin_box = qobject_cast<QDoubleSpinBox*>(item->widget())) {
+                            data.push_back(static_cast<float>(spin_box->value()));
+                        }
+                    }
+                }
+            }
+            if (data.size() == static_cast<size_t>(width * height)) {
+                auto kernel = std::make_shared<lpimgproc::Kernel>(data, width, height);
+                kernel_node->setValue(kernel);
+            }
+            };
+
+        auto recreateGrid = [=]() {
+            while (QLayoutItem* item = inputGridLayout->takeAt(0)) {
+                if (QWidget* widget = item->widget()) {
+                    widget->deleteLater();
+                }
+                delete item;
+            }
+
+            for (int y = 0; y < heightbox->value(); ++y) {
+                for (int x = 0; x < widthbox->value(); ++x) {
+                    auto* value_box = new QDoubleSpinBox();
+                    value_box->setRange(-100.0, 100.0);
+                    value_box->setSingleStep(0.1);
+                    value_box->setDecimals(2);
+                    value_box->setValue(0.0);
+                    inputGridLayout->addWidget(value_box, y, x);
+
+                    QObject::connect(value_box, &QDoubleSpinBox::valueChanged, updateKernel);
+                }
+            }
+            };
+
+        QObject::connect(widthbox, &QSpinBox::valueChanged, [=]() {
+            recreateGrid();
+            updateKernel();
+            });
+        QObject::connect(heightbox, &QSpinBox::valueChanged, [=]() {
+            recreateGrid();
+            updateKernel();
+            });
+
+        recreateGrid();
+        updateKernel();
+
+        auto* proxy = new QGraphicsProxyWidget(this);
+        proxy->setWidget(interfaceBox);
+        proxy->setPos(5, 40);
+
+        QSize size = interfaceBox->sizeHint();
+        setRect(0, 0, std::max(150, size.width() + 10), size.height() + 50);
+        for (auto* pin : output_pins_) {
+            pin->setPos(rect().width(), pin->pos().y());
+        }
     }
 }
 
