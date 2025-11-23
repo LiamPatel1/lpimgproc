@@ -5,6 +5,9 @@ public:
     ConvolveNode() {
         initInputs(2);
         initOutputs(1);
+
+        inputs_[0].name = "Image";
+        inputs_[1].name = "Kernel";
     }
 
     std::string name() const override { return "Convolve"; }
@@ -20,7 +23,7 @@ protected:
         auto pkernel = std::get_if<KernelPtr>(&inKernal);
 
 
-            if (*pimg and *pkernel) {
+            if (*pimg && *pkernel) {
                 lpimgproc::Image out = lpimgproc::operators::convolve(**pimg, **pkernel);
                 outputs_[0].value = std::make_shared<lpimgproc::Image>(std::move(out));
                 return;

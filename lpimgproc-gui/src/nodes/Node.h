@@ -24,13 +24,15 @@ using Value = std::variant<std::monostate, ImagePtr, KernelPtr, uint32_t, float,
 struct InputPin {
     OutputPin* connection = nullptr;  
     size_t outputIndex = 0;           
-    Node* node = nullptr;             
+    Node* node = nullptr;
+    std::string name;
 };
 
 struct OutputPin {
     Value value;
     Node* node = nullptr;             
     std::vector<InputPin*> connections;
+    std::string name;
 };
 
 class Node {
