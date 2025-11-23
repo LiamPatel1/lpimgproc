@@ -4,7 +4,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-add_executable(lpimgproc-gui "src/main.cpp" "src/views/NodeItem.h" "src/views/NodeItem.cpp" "src/NodeEditorWidget.h" "src/NodeEditorWidget.cpp" "src/nodes/InvertNode.h" "src/nodes/FloatNode.h" "src/nodes/ImageNodes.h" "src/views/PinItem.h" "src/views/ConnectionItem.h" "src/NodeFactory.h" "src/NodeFactory.cpp" "src/views/PinItem.cpp" "src/views/ConnectionItem.cpp" "src/nodes/KernelNode.h" "src/nodes/ConvolveNode.h"  )
+add_executable(lpimgproc-gui "src/main.cpp" "src/views/NodeItem.h" "src/views/NodeItem.cpp" "src/NodeEditorWidget.h" "src/NodeEditorWidget.cpp" "src/nodes/InvertNode.h" "src/nodes/FloatNode.h" "src/nodes/ImageNodes.h" "src/views/PinItem.h" "src/views/ConnectionItem.h" "src/NodeFactory.h" "src/NodeFactory.cpp" "src/views/PinItem.cpp" "src/views/ConnectionItem.cpp" "src/nodes/KernelNode.h" "src/nodes/ConvolveNode.h"   "src/nodes/AddNode.h" "src/nodes/NormaliseNode.h" "src/nodes/atan2Node.h" "src/nodes/PowNode.h" "src/nodes/NonMaximumSuppressionNode.h" "src/nodes/DoubleThresholdNode.h" "src/nodes/Hysteresis.h" "src/nodes/GrayscaleNode.h")
 
 target_include_directories(lpimgproc-gui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 

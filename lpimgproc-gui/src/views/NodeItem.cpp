@@ -111,9 +111,9 @@ NodeItem::NodeItem(std::shared_ptr<Node> node_logic)
                 0, 0, 0
             }},
             { "Gaussian Blur", 3, 3, {
-                1.0f / 16, 2.0f / 16, 1.0f / 16,
-                2.0f / 16, 4.0f / 16, 2.0f / 16,
-                1.0f / 16, 2.0f / 16, 1.0f / 16
+                1.0f / 8,  2.0f / 8, 1.0f / 8,
+                2.0f / 8,  4.0f / 8, 2.0f / 8,
+                1.0f / 8,  2.0f / 8, 1.0f / 8
             }},
             { "Sharpen", 3, 3, {
                  0, -1,  0,
@@ -129,7 +129,17 @@ NodeItem::NodeItem(std::shared_ptr<Node> node_logic)
                 -2, -1,  0,
                 -1,  1,  1,
                  0,  1,  2
-            }}
+            }},
+            { "Sobel X", 3, 3, {
+                -1, 0, 1,
+                -2, 0, 2,
+                -1, 0, 1
+            }},
+            { "Sobel Y", 3, 3, {
+                -1, -2, -1,
+                 0,  0,  0,
+                 1,  2,  1
+            }},
         };
 
         presetCombo->addItem("Custom");
