@@ -13,4 +13,12 @@ namespace lpimgproc::operators {
 
     Image convolve(const Image& img, const Kernel& kernel);
 
+    Image add(const Image& img1, const Image& img2);
+
+    Image pow(const Image& img, const float exp);
+
+    Image atan2(const Image& img1, const Image& img2);
+
+    Image normalise(const Image& img);
+
 }

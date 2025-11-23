@@ -1,6 +1,8 @@
 ﻿#include "lpimgproc/Image.h"
 #include "lpimgproc/operators.h"
 
+#include <cmath>
+
 namespace lpimgproc::operators {
 
      Image invert(const Image& img, uint32_t flags) {
@@ -60,7 +62,74 @@ namespace lpimgproc::operators {
          return outputImage;
      }
 
+     Image add(const Image& img1, const Image& img2) {
 
+         if (img1.width() != img2.width() || img1.height() != img2.height() || img1.colourSpace() != img2.colourSpace()) {
+             throw std::invalid_argument("images are not compatable");
+         }
+
+         Image newimg(img1);
+
+         for (uint64_t i = 0; i < newimg.subpixelCount(); i++) {
+             newimg.at(i) = img1.at(i) + img2.at(i);
+         }
+
+         return newimg;
+     }
+
+     Image pow(const Image& img, const float exp) {
+
+         Image newimg(img);
+
+         for (uint64_t i = 0; i < newimg.subpixelCount(); i++) {
+             newimg.at(i) = std::powf(img.at(i), exp);
+         }
+
+         return newimg;
+     }
+
+     Image atan2(const Image& img1, const Image& img2) {
+
+         if (img1.width() != img2.width() || img1.height() != img2.height() || img1.colourSpace() != img2.colourSpace()) {
+             throw std::invalid_argument("images are not compatable");
+         }
+
+         Image newimg(img1);
+
+         for (uint64_t i = 0; i < newimg.subpixelCount(); i++) {
+             newimg.at(i) = atan2f(img1.at(i), img2.at(i));
+         }
+
+         return newimg;
+     }
+
+     Image normalise(const Image& img) {
+
+         float minVal = std::numeric_limits<float>::infinity();
+         float maxVal = -std::numeric_limits<float>::infinity();
+
+         for (uint64_t i = 0; i < img.subpixelCount(); i++) {
+             float v = img.at(i);
+             if (v < minVal) minVal = v;
+             if (v > maxVal) maxVal = v;
+         }
+
+         Image out(img);
+
+         if (minVal == maxVal) {
+             for (uint64_t i = 0; i < out.subpixelCount(); i++)
+                 out.at(i) = 0.0f;
+             return out;
+         }
+
+         const float invRange = 1.0f / (maxVal - minVal);
+
+         for (uint64_t i = 0; i < out.subpixelCount(); i++) {
+             out.at(i) = (img.at(i) - minVal) * invRange;
+         }
+
+         return out;
+     }
 
 
 }
