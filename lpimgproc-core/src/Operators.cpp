@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <numbers>
+#include <algorithm>
 
 namespace lpimgproc::operators {
 
@@ -78,32 +79,45 @@ namespace lpimgproc::operators {
      // TODO: edge handling flags, auto normalisation, just make better
      Image convolve(const Image& img, const Kernel& kernel) {
 
-         Image outputImage(img.width(), img.height(), img.colourSpace());
+         const uint32_t w = img.width();
+         const uint32_t h = img.height();
+         const uint8_t channels = Image::channels(img.colourSpace());
 
-         const int kernelCenterX = kernel.width() / 2;
-         const int kernelCenterY = kernel.height() / 2;
+         Image output(w, h, img.colourSpace());
 
-         for (uint32_t y = kernelCenterY; y < img.height() - kernelCenterY; ++y) {
-             for (uint32_t x = kernelCenterX; x < img.width() - kernelCenterX; ++x) {
+         const int kW = (int)kernel.width();
+         const int kH = (int)kernel.height();
+         const int kCx = kW / 2;  // kernel center
+         const int kCy = kH / 2;
 
-                 for (uint8_t c = 0; c < Image::channels(img.colourSpace()); ++c) {
+         for (uint32_t y = 0; y < h; ++y) {
+             for (uint32_t x = 0; x < w; ++x) {
+
+                 for (uint8_t c = 0; c < channels; ++c) {
 
                      float sum = 0.0f;
-                     for (uint32_t ky = 0; ky < kernel.height(); ++ky) {
-                         for (uint32_t kx = 0; kx < kernel.width(); ++kx) {
-                             int ix = x - kernelCenterX + kx;
-                             int iy = y - kernelCenterY + ky;
+
+                     for (int ky = 0; ky < kH; ++ky) {
+                         for (int kx = 0; kx < kW; ++kx) {
+
+                             // image coordinates
+                             int ix = (int)x + (kx - kCx);
+                             int iy = (int)y + (ky - kCy);
+
+                             // clamp to edge
+                             ix = std::clamp(ix, 0, (int)w - 1);
+                             iy = std::clamp(iy, 0, (int)h - 1);
 
                              sum += img.at(ix, iy, c) * kernel.at(kx, ky);
                          }
                      }
 
-                     outputImage.at(x, y, c) = sum;
+                     output.at(x, y, c) = sum;
                  }
              }
          }
 
-         return outputImage;
+         return output;
      }
 
      Image add(const Image& img1, const Image& img2) {

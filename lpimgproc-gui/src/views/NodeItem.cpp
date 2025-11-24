@@ -21,7 +21,7 @@
 #include <QLabel>
 
 NodeItem::NodeItem(std::shared_ptr<Node> node_logic)
-    : QGraphicsRectItem(0, 0, 150, 100), node_logic_(std::move(node_logic)) {
+    : QGraphicsRectItem(0, 0, 150, 100), node_logic_(node_logic) {
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     setFlag(QGraphicsItem::ItemSendsGeometryChanges);

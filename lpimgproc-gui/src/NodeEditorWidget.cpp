@@ -60,7 +60,7 @@ NodeEditorWidget::NodeEditorWidget(QWidget* parent) : QWidget(parent) {
 }
 
 void NodeEditorWidget::addNode(std::shared_ptr<Node> node_logic, const QPointF& pos) {
-    auto node_item = new NodeItem(std::move(node_logic));
+    auto node_item = new NodeItem(node_logic);
     node_item->setPos(pos);
     scene_->addItem(node_item);
 }
