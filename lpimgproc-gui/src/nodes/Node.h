@@ -18,7 +18,6 @@ namespace lpimgproc {
 using ImagePtr = std::shared_ptr<lpimgproc::Image>;
 using KernelPtr = std::shared_ptr<lpimgproc::Kernel>;
 
-
 using Value = std::variant<std::monostate, ImagePtr, KernelPtr, uint32_t, float, std::string>;
 
 struct InputPin {

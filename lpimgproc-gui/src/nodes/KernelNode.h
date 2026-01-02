@@ -16,8 +16,6 @@ public:
         }
     }
 
-
-
 protected:
     void compute() override {
         outputs_[0].value = kernel_;

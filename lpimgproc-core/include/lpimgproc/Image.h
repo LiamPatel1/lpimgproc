@@ -3,7 +3,6 @@
 
 namespace lpimgproc {
 
-
 	class Image {
 
 	public:
@@ -22,6 +21,7 @@ namespace lpimgproc {
 			case G: return 1;
 			case GA: return 2;
 			default: return 0;
+
 			}
 		}
 
