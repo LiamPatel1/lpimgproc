@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
         }
         });
 
-    window.setWindowTitle("Node Graph Image Processor");
+    window.setWindowTitle("lpimgproc-gui");
     window.resize(1200, 800);
     window.show();
     return app.exec();
